@@ -1,0 +1,44 @@
+.carve-border {
+	border-bottom-left-radius: 3px;
+	border-bottom-right-radius: 3px;
+}
+
+.pattern {
+	background:#eaeaea url(../img/pattern.png) repeat;
+}
+
+.pattern2 {
+	background:#eaeaea url(../img/pattern2.png) repeat;
+}
+
+.pattern3 {
+	background:#eaeaea url(../img/pattern3.png) repeat;
+}
+
+.pattern4 {
+	background:#eaeaea url(../img/pattern4.png) repeat;
+}
+
+.pattern5 {
+	background:#eaeaea url(../img/pattern5.png) repeat;
+}
+
+.pattern6 {
+	background:#eaeaea url(../img/pattern6.png) repeat;
+}
+
+.pattern7 {
+	background:#eaeaea url(../img/pattern7.png) repeat;
+}
+
+.pattern8 {
+	background:#eaeaea url(../img/pattern8.png) repeat;
+}
+
+.no-border {
+	border: none;
+}
+
+.small-shadow {
+	box-shadow: 0px 0px 5px 1px black;
+}
