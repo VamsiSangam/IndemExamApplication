@@ -1,0 +1,272 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<title>INDEM Exam</title>
+		<meta name="viewport" content="width=device-width, initial-scale=1">
+		<link href="../css/bootstrap.min.css" rel="stylesheet"/>
+		<link href="../css/Header-Footer.css" rel="stylesheet"/>
+		<link href="../css/panel-styling.css" rel="stylesheet"/>
+		<link rel="stylesheet" type="text/css" href="../css/default.css" />
+		<link rel="shortcut icon" href="../img/logo.png"/>
+		<script type="text/javascript" src="../jquery/jquery.min.js"></script>
+		<script type="text/javascript">
+			indx = 1;
+			max = 0;
+
+			$(document).ready(function() {
+				$('#name').html(GetParameterValues('name'));
+				$('#roll_no').html(GetParameterValues('roll_no'));
+				$.getJSON("/Indem/scrollQ", {q_no: indx}, displayNewQ);
+				$.getJSON("/Indem/countQuestions", {}, setMax());
+			});
+
+			function setMax(data) {
+				if (data.error) {
+					console.log("Oops! Error!!");
+				} else {
+					max = data.count;
+					console.log("max = " + count);
+				}
+			}
+
+			function nextQ() {
+				indx++;
+
+				if (indx === 10) {
+					$('#next').attr("disabled", "disabled");
+				} else if (indx === 2) {
+					$('#prev').removeAttr("disabled");
+				}
+
+				$.getJSON("/Indem/scrollQ", {q_no: indx}, displayNewQ);
+			}
+
+			function prevQ() {
+				indx--;
+
+				if (indx === 1) {
+					$('#prev').attr("disabled", "disabled");
+				} else if (indx === 9) {
+					$('#next').removeAttr("disabled");
+				}
+
+				$.getJSON("/Indem/scrollQ", {q_no: indx}, displayNewQ);
+			}
+
+			function displayNewQ(data) {
+				if (data.error) {
+					$('#qnum').html(data.error);
+				} else {
+					$('#question').html(data.question);
+					$('#choice1').html(data.choice1);
+					$('#choice2').html(data.choice2);
+					$('#choice3').html(data.choice3);
+					$('#choice4').html(data.choice4);
+
+					if (data.flag === "I") {
+						$('#q_img').removeAttr("src");
+						$('#q_img').removeAttr("hidden");
+						$('#q_img').attr("src", "/Indem/displayphoto?q_no=" + data.q_no);
+					} else {
+						$('#q_img').attr("hidden", "hidden");
+						$('#q_img').removeAttr("src");
+					}
+
+					if (i === 10) {
+						$('#ans').val("Submit this Question");
+					}
+				}
+			}
+
+			function ansQ() {
+				console.log("ansQ() called");
+
+				$.getJSON("/Indem/updateAnswer", {roll_no: $('#roll_no').html(), q_no: i, choice: $('input[name=choice]:checked').val()}, nextQ);
+			}
+		</script>
+	</head>
+	<body onLoad="show_clock();">
+		<!--==========Header Part==========-->
+		<div class="container-fluid">
+			<div class="container-fluid row" id="main_header">
+				<div class="visible-lg col-lg-2">
+					<img src="../img/logo.png" id="header_logo" class="img-responsive" alt="Responsive image">
+				</div>
+				<div class="col-lg-8 col-md-10 col-xs-12">
+					<h1 id="header_font1">Rajiv Gandhi Institute of Information Technology</h1><h2 id="header_font1">(A Campus of IIIT Allahabad)</h2>
+				</div>
+				<div class="visible-lg col-lg-2"></div>
+			</div>
+		</div>
+		<br>
+		<!--==========End of Header Part==========-->
+		<div class="container">
+			<div class="panel panel-primary" style="padding: 5px;">
+				<div class="panel-heading">
+					<h4>Schema</h4>
+				</div>
+				<div class="panel-body">
+					<div class="row">
+						<label class="col-sm-2 control-label">Schema Name - </label>
+						<div class="col-sm-10">indem</div>
+					</div>
+					<div class="row">
+						<label class="col-sm-2 control-label">Tables - </label>
+						<div class="col-sm-10">5</div>
+					</div>
+					<br>
+					<center>
+						<h4>Diagram</h4><br>
+						<img class="img-responsive" alt="indem-schema" src="../img/schema.png"/>
+					</center>
+				</div>
+			</div>
+            <div class="panel panel-primary" style="padding: 5px;">
+				<div class="panel-heading">
+					<h4>Code used to generate the tables</h4>
+				</div>
+				<div class="panel-body">
+					<div class="row">
+                        <pre>
+/* --- Table reset --- */
+drop table answers;
+drop table questions;
+drop table students;
+drop table exam_details;
+drop table feedback;
+
+/* --- Tables --- */
+create table students
+(
+	roll_no varchar(10)
+		constraint students_pk primary key,
+	name varchar(45)
+		constraint students_name_nn not null,
+	networking decimal(5, 2)
+		default 0,
+	iq decimal(5, 2)
+		default 0,
+	total tinyint
+		default 0
+);
+
+create table questions
+(
+	q_no tinyint
+		identity
+		constraint questions_q_no_pk primary key,
+	question varchar(8000)
+		constraint questions_question_nn not null,
+	image varbinary(8000),
+	choice1 varchar(8000)
+		constraint questions_choice1_nn not null,
+	choice2 varchar(8000)
+		constraint questions_choice2_nn not null,
+	choice3 varchar(8000)
+		constraint questions_choice3_nn not null,
+	choice4 varchar(8000)
+		constraint questions_choice4_nn not null,
+	q_type varchar(1),
+	correct_ans varchar(4)
+		constraint questions_correct_ans_nn not null,
+	positive_marks tinyint
+		default 3
+		constraint questions_positive_marks_greater_than_zero check(positive_marks > 0),
+	negative_marks tinyint
+		default 0
+		constraint questions_negative_marks_greater_than_zero check(negative_marks > 0),
+	flag varchar(2)		
+);
+
+create table answers
+(
+	roll_no varchar(10)
+		constraint answers_roll_no_fk foreign key references students(roll_no),
+	q_no tinyint
+		constraint answers_q_no foreign key references questions(q_no),
+	ans_selected varchar(4)		
+);
+
+
+create table feedback
+(
+	roll_no varchar(10)
+		constraint feedback_roll_no_nn not null,
+	name varchar(45)
+		constraint feedback_name_nn not null,
+	message varchar(8000)
+		constraint feedback_message_nn not null
+);
+
+create table exam_details
+(
+	exam_date datetime
+		constraint exam_details_exam_date_nn not null,
+	duration_mins tinyint
+		constraint exam_details_duration_mins not null
+		constraint exam_details_duration_greater_than_zero check(duration_mins > 0),
+	max_questions tinyint
+		constraint exam_details_duration_mins not null
+		constraint exam_details_max_questions_greater_than_zero check(max_questions > 0)
+		default 30,
+);
+
+insert into exam_details values
+(
+	getdate(),
+	60,
+	20
+);
+                        </pre>
+					</div>
+				</div>
+			</div>
+		</div>
+		<!--==========Footer Part==========-->
+		<!--==========Footer Part 1==========-->
+		<div class="container-fluid" id="footer1">
+			<div class="col-lg-2 col-md-offset-1">
+				<div class="row">
+					<div class="col-lg-12">&nbsp;</div>
+				</div>
+				<img class="hidden-xs" src="../img/logo.png" id="end-logo" alt="logo">
+				<div class="row">
+					<div class="col-lg-12">&nbsp;</div>
+				</div>
+			</div>
+			<div class="col-lg-6">
+				<div class="row">
+					<div class="col-lg-12">&nbsp;</div>
+				</div>
+				<center><font class="footer_font">Rajiv Gandhi Institute of Information Technology<br>
+					(A Campus of IIIT Allahabad)<br>
+					Tikarmafi, Amethi, Sultanpur District, UP-227413<br>
+					Telefax - (05368)273222</font></center>
+				<div class="row">
+					<div class="col-lg-12">&nbsp;</div>
+				</div>
+			</div>
+			<div class="col-lg-3" style="padding: 25px 0px 0px 0px;">
+				<center>
+					<img src="../img/flag3.png" id="flag" alt="logo">
+					<script language="javascript" src="../js/live_clock.js"></script>
+				</center>
+			</div>
+		</div>
+		<!--==========End of Footer Part 1==========-->
+		<!--==========Footer Part 2==========-->
+		<div class="container-fluid" id="footer2">
+			<div class="row">
+				<div class="col-lg-12">&nbsp;</div>
+			</div>
+			<center>
+				<input type="button" class="btn btn-primary button" value="INDEM"/>&nbsp;&nbsp;|&nbsp;
+				<input type="button" class="btn btn-primary button" value="Developers"/>
+			</center>
+			<div class="row">
+				<div class="col-lg-12">&nbsp;</div>
+			</div>
+		</div>
+		<!--==========End of Footer Part 2==========-->
+	</body>
+</html>
